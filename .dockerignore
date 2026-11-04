@@ -4,3 +4,5 @@ dist
 .env*
 .sandbox-mail
 coverage
+.test-postgres
+.private-exports

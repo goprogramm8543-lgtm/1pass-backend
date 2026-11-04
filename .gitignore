@@ -6,3 +6,5 @@ dist/
 coverage/
 *.log
 .sandbox-mail/
+.test-postgres/
+.private-exports/

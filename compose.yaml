@@ -6,11 +6,11 @@ services:
       POSTGRES_USER: marketing
       POSTGRES_PASSWORD: development-only
     ports:
-      - "127.0.0.1:5432:5432"
+      - '127.0.0.1:5432:5432'
     volumes:
       - marketing-db:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U marketing -d marketing"]
+      test: ['CMD-SHELL', 'pg_isready -U marketing -d marketing']
       interval: 5s
       timeout: 5s
       retries: 10

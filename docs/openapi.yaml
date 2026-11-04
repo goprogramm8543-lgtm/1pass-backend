@@ -1,0 +1,994 @@
+openapi: 3.1.0
+info:
+  title: 1Pass Marketing API
+  version: 1.0.0
+  description: "Development/sandbox contract. Strict JSON objects; unknown properties and query
+    parameters rejected. ASCII email is lowercased without dot/plus rewriting. Plain text only:
+    names reject URLs, HTML and controls; messages reject HTML and non-whitespace controls.
+    Interests must be unique. Current server consent version is required. Form body limit 16 KiB;
+    business 32 KiB. No vault identity or campaign APIs."
+servers:
+  - url: http://localhost:4000
+    description: Development placeholder
+paths:
+  /api/v1/marketing/subscriptions:
+    post:
+      operationId: post_subscriptions
+      summary: Request a confirmation. Unknown, confirmed and suppressed addresses get the same response.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Subscribe"
+            example:
+              email: person@example.com
+              interests:
+                - password_manager
+              consent: true
+              consentVersion: development-marketing-v1
+              source: homepage
+              website: ""
+      responses:
+        "202":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Result"
+              example:
+                success: true
+                code: REQUEST_RECEIVED
+                message: If eligible, we will send a confirmation email.
+        "400":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "410":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "415":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Retry after the Retry-After seconds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/v1/marketing/subscriptions/confirm:
+    post:
+      operationId: post_subscriptions_confirm
+      summary: Consume a single-use confirmation capability.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Token"
+            example: &a1
+              token: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Result"
+              example:
+                success: true
+                code: CONFIRMED
+        "400":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "410":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "415":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Retry after the Retry-After seconds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/v1/marketing/subscriptions/unsubscribe:
+    post:
+      operationId: post_subscriptions_unsubscribe
+      summary: Durable, repeatable opt-out. GET never changes state.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Token"
+            example: *a1
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Result"
+              example:
+                success: true
+                code: UNSUBSCRIBED
+        "400":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "410":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "415":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Retry after the Retry-After seconds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/v1/marketing/subscriptions/preferences:
+    get:
+      operationId: get_subscriptions_preferences
+      summary: Read status and topics using a 30-minute scoped bearer capability.
+      security:
+        - PreferencesBearer: []
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreferenceResult"
+              example:
+                status: confirmed
+                interests:
+                  - business
+        "400":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "410":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "415":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Retry after the Retry-After seconds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      operationId: patch_subscriptions_preferences
+      summary: Replace topics without reactivating consent.
+      security:
+        - PreferencesBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Preferences"
+            example:
+              interests:
+                - business
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PreferenceResult"
+              example:
+                status: confirmed
+                interests:
+                  - business
+        "400":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "410":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "415":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Retry after the Retry-After seconds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/v1/marketing/subscriptions/preferences/request:
+    post:
+      operationId: post_subscriptions_preferences_request
+      summary: Request a fresh management email without revealing subscription state.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PreferenceRequest"
+            example:
+              email: person@example.com
+              website: ""
+      responses:
+        "202":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Result"
+              example:
+                success: true
+                code: REQUEST_RECEIVED
+                message: If eligible, we will send a confirmation email.
+        "400":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "410":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "415":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Retry after the Retry-After seconds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/v1/marketing/contact:
+    post:
+      operationId: post_contact
+      summary: Store a plain-text enquiry; no promotional opt-in.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Contact"
+            example:
+              email: person@example.com
+              category: general
+              message: A question about the planned product.
+              website: ""
+      responses:
+        "202":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Result"
+              example:
+                success: true
+                code: REQUEST_RECEIVED
+                message: Your request has been received.
+        "400":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "410":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "415":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Retry after the Retry-After seconds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/v1/marketing/business-inquiries:
+    post:
+      operationId: post_business_inquiries
+      summary: Store research follow-up consent separately from marketing.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Business"
+            example:
+              name: Example Person
+              workEmail: person@example.com
+              teamSize: 11-50
+              contactConsent: true
+              role: Operations
+              useCase: Research about team workflows.
+              website: ""
+      responses:
+        "202":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Result"
+              example:
+                success: true
+                code: REQUEST_RECEIVED
+                message: Your request has been received.
+        "400":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "410":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "415":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Retry after the Retry-After seconds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/v1/marketing/webhooks/email:
+    post:
+      operationId: post_webhooks_email
+      summary: "Sandbox only: verify HMAC-SHA256 over timestamp + dot + exact raw JSON bytes."
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Webhook"
+            example:
+              id: sandbox-event-1
+              messageId: 1f54c859-67ce-4ed7-8d62-320481d3ea1b
+              type: delivered
+              occurredAt: 2026-11-04T00:00:00Z
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Result"
+              example:
+                success: true
+                code: EVENT_RECEIVED
+        "400":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "410":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "415":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Retry after the Retry-After seconds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      parameters:
+        - in: header
+          name: X-Webhook-Timestamp
+          required: true
+          schema:
+            type: string
+            pattern: ^\d{10}$
+          description: Unix seconds; maximum clock difference 300 seconds.
+        - in: header
+          name: X-Webhook-Signature
+          required: true
+          schema:
+            type: string
+            pattern: ^[a-f0-9]{64}$
+          description: Lowercase hex HMAC using EMAIL_WEBHOOK_SECRET. Event IDs deduplicate retries.
+  /health/live:
+    get:
+      operationId: health_live
+      summary: Process liveness
+      security: []
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+  /health/ready:
+    get:
+      operationId: health_ready
+      summary: Database and migration table readiness; restrict at edge
+      security: []
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+        "503":
+          description: Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+components:
+  securitySchemes:
+    PreferencesBearer:
+      type: http
+      scheme: bearer
+      description: Bounded marketing preferences capability; never a vault/account credential.
+  schemas:
+    Subscribe:
+      type: object
+      properties:
+        email:
+          type: string
+          maxLength: 254
+          allOf:
+            - pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+            - pattern: ^[\x21-\x7e]+$
+        interests:
+          minItems: 1
+          maxItems: 4
+          type: array
+          items:
+            type: string
+            enum:
+              - password_manager
+              - documents
+              - family
+              - business
+        consent:
+          type: boolean
+          const: true
+        consentVersion:
+          type: string
+          minLength: 1
+          maxLength: 100
+        source:
+          default: homepage
+          type: string
+          maxLength: 100
+          pattern: ^[a-zA-Z0-9/_-]+$
+        website:
+          default: ""
+          type: string
+          maxLength: 256
+      required:
+        - email
+        - interests
+        - consent
+        - consentVersion
+      additionalProperties: false
+    Token:
+      type: object
+      properties:
+        token:
+          type: string
+          pattern: ^[A-Za-z0-9_-]{43}$
+      required:
+        - token
+      additionalProperties: false
+    Preferences:
+      type: object
+      properties:
+        interests:
+          minItems: 1
+          maxItems: 4
+          type: array
+          items:
+            type: string
+            enum:
+              - password_manager
+              - documents
+              - family
+              - business
+      required:
+        - interests
+      additionalProperties: false
+    PreferenceRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          maxLength: 254
+          allOf:
+            - pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+            - pattern: ^[\x21-\x7e]+$
+        website:
+          default: ""
+          type: string
+          maxLength: 256
+      required:
+        - email
+      additionalProperties: false
+    Contact:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        email:
+          type: string
+          maxLength: 254
+          allOf:
+            - pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+            - pattern: ^[\x21-\x7e]+$
+        category:
+          type: string
+          enum:
+            - general
+            - business
+            - security
+            - privacy
+            - feedback
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 200
+        message:
+          type: string
+          maxLength: 3000
+        website:
+          default: ""
+          type: string
+          maxLength: 256
+      required:
+        - email
+        - category
+        - message
+      additionalProperties: false
+    Business:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        workEmail:
+          type: string
+          maxLength: 254
+          allOf:
+            - pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+            - pattern: ^[\x21-\x7e]+$
+        company:
+          type: string
+          minLength: 1
+          maxLength: 160
+        teamSize:
+          type: string
+          enum:
+            - 1-10
+            - 11-50
+            - 51-250
+            - 251+
+        useCase:
+          default: ""
+          type: string
+          maxLength: 2000
+        role:
+          type: string
+          minLength: 1
+          maxLength: 120
+        approach:
+          type: string
+          enum:
+            - Shared spreadsheet or document
+            - Passwords saved in browsers
+            - A team password manager
+            - Single sign-on or an identity provider
+            - Not sure, or something else
+        contactConsent:
+          type: boolean
+          const: true
+        website:
+          default: ""
+          type: string
+          maxLength: 256
+      required:
+        - name
+        - workEmail
+        - teamSize
+        - contactConsent
+      additionalProperties: false
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: ^[a-zA-Z0-9_-]{1,100}$
+        messageId:
+          type: string
+          format: uuid
+          pattern: ^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$
+        type:
+          type: string
+          enum:
+            - delivered
+            - bounced
+            - complained
+            - suppressed
+        occurredAt:
+          type: string
+          format: date-time
+          pattern: ^(?:(?:\d\d[2468][048]|\d\d[13579][26]|\d\d0[48]|[02468][048]00|[13579][26]00)-02-29|\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\d|30)|(?:02)-(?:0[1-9]|1\d|2[0-8])))T(?:(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z))$
+      required:
+        - id
+        - messageId
+        - type
+        - occurredAt
+      additionalProperties: false
+    Result:
+      type: object
+      required:
+        - success
+        - code
+      properties:
+        success:
+          const: true
+        code:
+          type: string
+        message:
+          type: string
+    Error:
+      type: object
+      required:
+        - success
+        - code
+        - requestId
+      properties:
+        success:
+          const: false
+        code:
+          type: string
+          enum:
+            - VALIDATION_ERROR
+            - CONSENT_VERSION_INVALID
+            - TOKEN_INVALID
+            - TOKEN_EXPIRED
+            - CAPABILITY_REQUIRED
+            - WEBHOOK_INVALID
+            - RATE_LIMITED
+            - HOST_NOT_ALLOWED
+            - ORIGIN_NOT_ALLOWED
+            - QUERY_NOT_ALLOWED
+            - JSON_REQUIRED
+            - INVALID_JSON
+            - PAYLOAD_TOO_LARGE
+            - INTERNAL_ERROR
+            - NOT_FOUND
+        requestId:
+          type: string
+        fields:
+          type: object
+          additionalProperties:
+            type: string
+    PreferenceResult:
+      type: object
+      required:
+        - status
+        - interests
+      properties:
+        status:
+          const: confirmed
+        interests:
+          type: array
+          items:
+            enum:
+              - password_manager
+              - documents
+              - family
+              - business
+    Health:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          enum:
+            - ok
+            - ready
+            - unavailable
