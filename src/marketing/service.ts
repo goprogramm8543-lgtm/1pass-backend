@@ -353,6 +353,30 @@ export class Marketing {
     });
     return received;
   }
+  async feedback(input: z.infer<typeof schemas.feedback>) {
+    if (input.website) return received;
+    await this.db.transaction(async (tx) => {
+      const id = randomUUID();
+      const { website: _, ...data } = input;
+      await tx.query(
+        "INSERT INTO marketing_feedback(id,category,protected_data,follow_up,consent_version,consent_text_hash,consented_at,delete_after) VALUES($1,$2,$3,$4,$5,$6,CASE WHEN $4 THEN now() ELSE NULL END,now()+$7*interval '1 day')",
+        [
+          id,
+          input.category,
+          this.protection.seal(data),
+          input.followUp,
+          this.c.FEEDBACK_CONSENT_VERSION,
+          digest(this.c.FEEDBACK_CONSENT_TEXT),
+          this.c.FEEDBACK_RETENTION_DAYS,
+        ],
+      );
+      await audit(tx, 'feedback_received', id, {
+        followUp: input.followUp,
+        version: this.c.FEEDBACK_CONSENT_VERSION,
+      });
+    });
+    return received;
+  }
   async emailEvent(event: z.infer<typeof schemas.webhook>) {
     await this.db.transaction(async (tx) => {
       const inserted = await tx.query(

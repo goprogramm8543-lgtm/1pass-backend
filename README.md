@@ -51,6 +51,23 @@ docs/               API contract, integration and operations guides
 
 ## Docker and deployment
 
+### Development, production and database scripts
+
+| Command                               | Purpose                                                                                        |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `npm run dev` / `npm run start:dev`   | Development API with automatic restart                                                         |
+| `npm run worker:dev`                  | Development worker with automatic restart                                                      |
+| `npm run build`                       | Compile TypeScript before running compiled commands                                            |
+| `npm start`                           | Run compiled API using the configured environment (sandbox supported)                          |
+| `npm run prod` / `npm run start:prod` | Run compiled API with `NODE_ENV=production`                                                    |
+| `npm run worker:prod`                 | Run compiled worker with `NODE_ENV=production`                                                 |
+| `npm run db:migrate`                  | Apply SQL migrations using the source runner                                                   |
+| `npm run db:status`                   | Read applied/pending migrations without changing the database; exits nonzero for pending/drift |
+| `npm run db:deploy`                   | Apply migrations using the compiled runner, without development dependencies                   |
+| `npm run generate:api`                | Generate the OpenAPI contract                                                                  |
+
+This project uses `pg` and SQL migrations, not Prisma: there is no Prisma schema or client to generate. Production API/worker commands deliberately retain the existing production guard and will fail until real email support is implemented. Use `npm start` for compiled local sandbox testing. Database commands still require valid PostgreSQL credentials.
+
 `Dockerfile` compiles the source and packages runtime dependencies, compiled code and migrations. It starts the API as a non-root user on port 4000. Run the email worker separately using the same image with `node dist/worker.js` as its command. The migration job uses `node dist/db/migrate.js`.
 
 `compose.yaml` currently starts only development PostgreSQL, with persistent storage and a health check: `docker compose up -d db`. Skip this when using your existing local database. A complete API/worker Compose deployment has not been added.
@@ -60,3 +77,7 @@ Direct Node.js and Docker deployment are both supported approaches. Production s
 - [API contract](docs/openapi.yaml): endpoints and payloads.
 - [Frontend integration](docs/integration.md): form mappings, token handling and error states.
 - [Operations](docs/operations.md): sandbox testing, deployment, privacy, recovery and release requirements.
+
+## PL-01 local integration
+
+The sibling Next.js frontend now supports explicitly enabled loopback marketing submissions and private token action pages. Independent `POST /api/v1/marketing/feedback` is included in OpenAPI and migration 003. `node --import tsx scripts/browser-qa.mjs` runs the actual browser/API/temp-PostgreSQL flow, captures only local encrypted mail and cleans up afterward. Ports 3100/4100 must be free; requires the sibling frontend dependencies and Edge on Windows. `npm run ops -- metrics` reports non-PII aggregate counts; private feedback review/export commands are documented in docs/operations.md. Production startup remains disabled pending a live provider and release approvals.

@@ -31,6 +31,13 @@ it('sandbox delivery is encrypted, idempotent, privately removable and retained 
     expect(protection.open<{ token: string }>(original).token).toBe(
       'a'.repeat(43),
     );
+    const content = protection.open<{ subject: string; text: string }>(
+      original,
+    );
+    expect(content.subject).toContain('Confirm');
+    expect(content.text).toContain('Until you confirm, you are not subscribed');
+    expect(content.text).toContain('unsubscribe');
+    expect(content.text).not.toContain('premium months');
     const m = new Marketing({} as Database, c);
     await cleanSandbox(m, { email: 'test@example.com', ids: new Set() });
     expect(await readdir(dir)).toEqual([]);

@@ -10,6 +10,11 @@ export interface Database extends Sql {
   close(): Promise<void>;
 }
 export function postgres(url: string): Database {
+  if (!url.trim()) {
+    throw new Error(
+      'DATABASE_URL is missing. Configure .env and run npm run migrate from the backend folder.',
+    );
+  }
   const pool = new pg.Pool({
     connectionString: url,
     max: 10,

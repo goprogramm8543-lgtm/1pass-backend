@@ -2,7 +2,7 @@
 
 Consolidated deployment, security, recovery and verification reference. For local setup, start with [README](../README.md).
 
-## Implementation decisions â€” 2026-11-03
+## Implementation decisions — 2026-11-03
 
 Scope: standalone marketing API only. No frontend edits, public deployment, vault identity or campaign sender.
 
@@ -41,7 +41,7 @@ Build with `docker build -t 1pass-marketing-backend .`. Supply a protected envir
 
 Terminate HTTPS at an approved ingress, preserve the canonical Host, limit request sizes/connections, disable query/body/header logging, and restrict `/health/ready` and operator access. Enable HSTS only after domain readiness. Use exact HTTPS origins for remote staging. The API does not trust forwarded IP headers: apply per-client limits at ingress; the database-backed application limiter sees the ingress IP when proxied. Never enable blanket `trustProxy` on an internet-reachable listener. Configure PostgreSQL with private networking, verified TLS and encrypted storage/backups.
 
-`DATA_KEYS` maps version IDs (`v1`, `v2`, â€¦) to 32-byte hex encryption keys. `DATA_ACTIVE_KEY` selects new writes. Keep old keys readable until all retained rows, sandbox files and restoreable backups are migrated or expired. `SUPPRESSION_HASH_KEY` is a separate stable HMAC key; losing or replacing it loses suppression matching. Do not rotate it by simply overwriting the value: plan a dual-identifier migration before any change. `EMAIL_WEBHOOK_SECRET` authenticates sandbox callback payloads only. Production provider signatures must follow the selected provider's contract.
+`DATA_KEYS` maps version IDs (`v1`, `v2`, …) to 32-byte hex encryption keys. `DATA_ACTIVE_KEY` selects new writes. Keep old keys readable until all retained rows, sandbox files and restoreable backups are migrated or expired. `SUPPRESSION_HASH_KEY` is a separate stable HMAC key; losing or replacing it loses suppression matching. Do not rotate it by simply overwriting the value: plan a dual-identifier migration before any change. `EMAIL_WEBHOOK_SECRET` authenticates sandbox callback payloads only. Production provider signatures must follow the selected provider's contract.
 
 `TOKEN_HASH_PEPPER` and Redis are intentionally not required. Random 256-bit tokens are SHA-256 hashed; PostgreSQL provides shared rate limits. Encrypted outbox payloads temporarily contain recoverable tokens for retry. Successful/cancelled jobs clear payloads. Retry failures store constant error codes without provider responses.
 
@@ -59,7 +59,7 @@ CI runs type checks, tests (including real PostgreSQL), formatting, contract dri
 
 ## Marketing API threat model
 
-Assets: addresses and consent evidence, private enquiries, scoped email capabilities, encryption/provider keys, suppression state, sender reputation and availability. Boundaries: public browser â†’ API; API/worker â†’ private PostgreSQL; worker â†’ sandbox filesystem (future provider); signed callbacks â†’ API; authorized operators â†’ CLI/backups. Marketing subscriber IDs never identify vault users.
+Assets: addresses and consent evidence, private enquiries, scoped email capabilities, encryption/provider keys, suppression state, sender reputation and availability. Boundaries: public browser → API; API/worker → private PostgreSQL; worker → sandbox filesystem (future provider); signed callbacks → API; authorized operators → CLI/backups. Marketing subscriber IDs never identify vault users.
 
 | Threat                       | Implemented control                                                                                               | Residual / release responsibility                                                           |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
@@ -184,3 +184,9 @@ An initial concurrent run of the standard and native suites hit a Windows test s
 ## Not exercised here
 
 Docker image build (Docker is not installed), remote GitHub Actions/CodeQL, hosted infrastructure/alerts, backups and restore drills, real email/provider webhooks, legal approval, or integrated frontend/browser staging E2E. Docker build and real PostgreSQL checks are configured in CI, but no remote run is claimed. Production remains blocked; the owner explicitly selected sandbox delivery.
+
+## Feedback (PL-01 M4)
+
+POST /api/v1/marketing/feedback is independent of subscriptions. Optional contact email requires separate follow-up permission. The encrypted payload stores category/problem/segment/country/email/permission; no raw IP is retained. Existing keyed rate records expire via purge. Status starts new; no public feed or admin endpoint. Feedback does not queue a notification containing private text.
+
+Authorized local operators with DB/decryption access can run `npm run ops -- feedback-export protected-output.json` (first 100 records; exclusive file creation) then `npm run ops -- feedback-review review.json`, where the protected input contains an id and status reviewed/closed. Never commit exports; restrict OS access, verify contact permission before follow-up, and remove exports after review. An email in a feedback record is not marketing consent. Existing export/delete subject-file operations include feedback; anonymous records can be removed by a verified operator using their record ID. `ops purge` removes expired feedback and its audit references. Default FEEDBACK_RETENTION_DAYS=90 requires owner/legal approval before public collection. Stop workers for deletion as in existing runbook.

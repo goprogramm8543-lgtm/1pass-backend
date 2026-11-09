@@ -184,6 +184,9 @@ export function buildApp(
         await m.requestPreferences(schema.preferenceRequest.parse(req.body)),
       ),
   );
+  app.post(`${prefix}/feedback`, async (req, reply) =>
+    reply.code(202).send(await m.feedback(schema.feedback.parse(req.body))),
+  );
   app.post(`${prefix}/contact`, async (req, reply) =>
     reply
       .code(202)

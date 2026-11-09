@@ -89,3 +89,42 @@ export const webhook = z.strictObject({
   type: z.enum(['delivered', 'bounced', 'complained', 'suppressed']),
   occurredAt: z.iso.datetime(),
 });
+
+export const feedback = z
+  .strictObject({
+    category: z.enum([
+      'passwords',
+      'notes',
+      'sharing',
+      'documents',
+      'family',
+      'business',
+      'other',
+    ]),
+    description: message(1000).default(''),
+    segment: z
+      .enum([
+        'consumer',
+        'freelancer',
+        'family',
+        'small_business',
+        'enterprise',
+      ])
+      .optional(),
+    country: z
+      .string()
+      .regex(/^[A-Z]{2}$/)
+      .optional(),
+    email: email.optional(),
+    followUp: z.boolean().default(false),
+    website,
+  })
+  .superRefine((v, ctx) => {
+    if (Boolean(v.email) !== v.followUp)
+      ctx.addIssue({
+        code: 'custom',
+        path: [v.followUp ? 'email' : 'followUp'],
+        message:
+          'Contact details require separate follow-up permission, and permission requires an email.',
+      });
+  });

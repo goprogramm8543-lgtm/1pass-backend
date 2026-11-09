@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Config } from '../config.js';
+import { renderMarketingMail } from './templates.js';
 import { Protection } from '../common/security.js';
 export interface Mail {
   to?: string;
@@ -44,7 +45,8 @@ export class SandboxProvider implements EmailProvider {
         this.protection.seal({
           id,
           event,
-          templateVersion: 'v1',
+          templateVersion: 'prelaunch-v2',
+          ...renderMarketingMail(event, links),
           ...payload,
           links,
         }),

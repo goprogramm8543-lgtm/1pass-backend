@@ -4,8 +4,9 @@ import { parse } from 'yaml';
 it('publishes all marketing and health routes with strict input contracts', async () => {
   const contract = parse(await readFile('docs/openapi.yaml', 'utf8'));
   expect(contract.openapi).toBe('3.1.0');
-  expect(Object.keys(contract.paths)).toHaveLength(10);
+  expect(Object.keys(contract.paths)).toHaveLength(11);
   for (const name of [
+    'Feedback',
     'Subscribe',
     'Token',
     'Preferences',

@@ -11,6 +11,12 @@ const response = (description: string, name: string, example?: unknown) => ({
 });
 const schemas: Record<string, unknown> = {};
 const examples: Record<string, unknown> = {
+  Feedback: {
+    category: 'passwords',
+    description: 'Finding the right account is difficult.',
+    followUp: false,
+    website: '',
+  },
   Subscribe: {
     email: 'person@example.com',
     interests: ['password_manager'],
@@ -45,6 +51,7 @@ const examples: Record<string, unknown> = {
   },
 };
 for (const [name, schema] of Object.entries({
+  Feedback: s.feedback,
   Subscribe: s.subscribe,
   Token: s.tokenBody,
   Preferences: s.preferences,
@@ -178,6 +185,13 @@ function operation(
   paths[`/api/v1/marketing${path}`]![method] = op;
   return op;
 }
+operation(
+  '/feedback',
+  'post',
+  'Independent problem feedback; separate optional contact permission, no subscription.',
+  'Feedback',
+  202,
+);
 operation(
   '/subscriptions',
   'post',

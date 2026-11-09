@@ -6,6 +6,13 @@ export async function purge(m: Marketing) {
     // Expired enquiry payloads and corresponding pending/dead notifications disappear together.
     await tx.query(`DELETE FROM marketing_email_outbox WHERE related_id IN
    (SELECT id FROM marketing_contact_requests WHERE delete_after<=now() UNION SELECT id FROM marketing_business_inquiries WHERE delete_after<=now())`);
+    const feedback = await tx.query(
+      'DELETE FROM marketing_feedback WHERE delete_after<=now() RETURNING id',
+    );
+    for (const row of feedback.rows)
+      await tx.query('DELETE FROM marketing_audit_events WHERE target_id=$1', [
+        row.id,
+      ]);
     const contacts = await tx.query(
       'DELETE FROM marketing_contact_requests WHERE delete_after<=now() RETURNING id',
     );
@@ -38,6 +45,7 @@ export async function purge(m: Marketing) {
     );
     await tx.query('DELETE FROM marketing_rate_limits WHERE reset_at<now()');
     const counts = {
+      feedback: feedback.rows.length,
       contacts: contacts.rows.length,
       business: business.rows.length,
       pending: pending.rows.length,
@@ -72,6 +80,7 @@ export async function erase(m: Marketing, email: string) {
     for (const table of [
       'marketing_contact_requests',
       'marketing_business_inquiries',
+      'marketing_feedback',
     ]) {
       const rows = (
         await tx.query<{ id: string; protected_data: string }>(
@@ -110,6 +119,7 @@ export async function exportSubject(m: Marketing, email: string) {
   for (const table of [
     'marketing_contact_requests',
     'marketing_business_inquiries',
+    'marketing_feedback',
   ]) {
     for (const row of (
       await m.db.query<{
@@ -142,4 +152,37 @@ export async function exportSubject(m: Marketing, email: string) {
       ).rows
     : [];
   return { subscriber, interests, consentEvents, enquiries };
+}
+
+// Private CLI only: database credentials and protected output access are operator capabilities.
+export async function reviewFeedback(
+  m: Marketing,
+  id: string,
+  status: 'reviewed' | 'closed',
+) {
+  return m.db.transaction(async (tx) => {
+    const result = await tx.query(
+      'UPDATE marketing_feedback SET status=$2 WHERE id=$1 RETURNING id',
+      [id, status],
+    );
+    if (!result.rows.length) throw new Error('Feedback record not found');
+    await audit(tx, 'feedback_reviewed', id, { status });
+  });
+}
+export async function exportFeedback(m: Marketing) {
+  const rows = (
+    await m.db.query<{
+      id: string;
+      category: string;
+      protected_data: string;
+      status: string;
+      created_at: Date;
+    }>(
+      'SELECT id,category,protected_data,status,created_at FROM marketing_feedback ORDER BY created_at LIMIT 100',
+    )
+  ).rows;
+  return rows.map(({ protected_data, ...row }) => ({
+    ...row,
+    data: m.protection.open(protected_data),
+  }));
 }

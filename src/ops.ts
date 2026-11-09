@@ -3,6 +3,8 @@ import { config } from './config.js';
 import { postgres } from './db/client.js';
 import { Marketing } from './marketing/service.js';
 import { purge, erase, exportSubject } from './marketing/operations.js';
+import { z } from 'zod';
+import { reviewFeedback, exportFeedback } from './marketing/operations.js';
 import { email } from './marketing/schemas.js';
 import { cleanSandbox } from './email/cleanup.js';
 const c = config(),
@@ -10,7 +12,48 @@ const c = config(),
   m = new Marketing(db, c);
 const [command, path, output] = process.argv.slice(2);
 try {
-  if (command === 'purge') {
+  if (command === 'metrics') {
+    console.log(
+      JSON.stringify(
+        {
+          subscriptions: (
+            await db.query(
+              'SELECT status,count(*)::int AS count FROM marketing_subscribers GROUP BY status',
+            )
+          ).rows,
+          confirmedInterests: (
+            await db.query(
+              "SELECT i.interest,count(*)::int AS count FROM marketing_subscriber_interests i JOIN marketing_subscribers s ON s.id=i.subscriber_id WHERE s.status='confirmed' GROUP BY i.interest",
+            )
+          ).rows,
+          feedback: (
+            await db.query(
+              'SELECT category,status,count(*)::int AS count FROM marketing_feedback GROUP BY category,status',
+            )
+          ).rows,
+          business: (
+            await db.query(
+              'SELECT status,count(*)::int AS count FROM marketing_business_inquiries GROUP BY status',
+            )
+          ).rows,
+        },
+        null,
+        2,
+      ),
+    );
+  } else if (command === 'feedback-export' && path) {
+    await writeFile(path, JSON.stringify(await exportFeedback(m), null, 2), {
+      flag: 'wx',
+      mode: 0o600,
+    });
+    console.log('Protected feedback export written. Remove after review.');
+  } else if (command === 'feedback-review' && path) {
+    const input = z
+      .strictObject({ id: z.uuid(), status: z.enum(['reviewed', 'closed']) })
+      .parse(JSON.parse(await readFile(path, 'utf8')));
+    await reviewFeedback(m, input.id, input.status);
+    console.log('Review recorded');
+  } else if (command === 'purge') {
     console.log(await purge(m));
     await cleanSandbox(m);
   } else if (command === 'queue-status')

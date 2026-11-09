@@ -11,6 +11,81 @@ servers:
   - url: http://localhost:4000
     description: Development placeholder
 paths:
+  /api/v1/marketing/feedback:
+    post:
+      operationId: post_feedback
+      summary: Independent problem feedback; separate optional contact permission, no subscription.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Feedback"
+            example:
+              category: passwords
+              description: Finding the right account is difficult.
+              followUp: false
+              website: ""
+      responses:
+        "202":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Result"
+              example:
+                success: true
+                code: REQUEST_RECEIVED
+                message: Your request has been received.
+        "400":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "410":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "413":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "415":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Retry after the Retry-After seconds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Stable error code; no private details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /api/v1/marketing/subscriptions:
     post:
       operationId: post_subscriptions
@@ -720,6 +795,50 @@ components:
       scheme: bearer
       description: Bounded marketing preferences capability; never a vault/account credential.
   schemas:
+    Feedback:
+      type: object
+      properties:
+        category:
+          type: string
+          enum:
+            - passwords
+            - notes
+            - sharing
+            - documents
+            - family
+            - business
+            - other
+        description:
+          default: ""
+          type: string
+          maxLength: 1000
+        segment:
+          type: string
+          enum:
+            - consumer
+            - freelancer
+            - family
+            - small_business
+            - enterprise
+        country:
+          type: string
+          pattern: ^[A-Z]{2}$
+        email:
+          type: string
+          maxLength: 254
+          allOf:
+            - pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+            - pattern: ^[\x21-\x7e]+$
+        followUp:
+          default: false
+          type: boolean
+        website:
+          default: ""
+          type: string
+          maxLength: 256
+      required:
+        - category
+      additionalProperties: false
     Subscribe:
       type: object
       properties:

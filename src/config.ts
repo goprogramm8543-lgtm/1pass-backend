@@ -24,6 +24,11 @@ const settings = z.object({
   CONTACT_CONSENT_TEXT: z
     .string()
     .default('DEVELOPMENT ONLY: contact me about this research.'),
+  FEEDBACK_CONSENT_VERSION: z.string().default('development-feedback-v1'),
+  FEEDBACK_CONSENT_TEXT: z
+    .string()
+    .default('DEVELOPMENT ONLY: contact me about this feedback.'),
+  FEEDBACK_RETENTION_DAYS: z.coerce.number().int().positive().default(90),
   CONFIRM_TOKEN_TTL_HOURS: z.coerce.number().positive().max(48).default(24),
   PREFERENCES_SESSION_TTL_MINUTES: z.coerce
     .number()
