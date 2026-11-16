@@ -111,10 +111,7 @@ export const feedback = z
         'enterprise',
       ])
       .optional(),
-    country: z
-      .string()
-      .regex(/^[A-Z]{2}$/)
-      .optional(),
+    // Country is no longer collected (removed from the form to keep feedback short).
     email: email.optional(),
     followUp: z.boolean().default(false),
     website,

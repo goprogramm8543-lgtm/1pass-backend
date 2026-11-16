@@ -21,7 +21,8 @@ import { SandboxProvider } from '../src/email/provider.ts';
 import { runOne } from '../src/email/outbox.ts';
 import { testConfig } from '../tests/helpers.ts';
 const require = createRequire(resolve('../1pass/package.json'));
-const { chromium, expect } = require('@playwright/test');
+const { chromium, expect: baseExpect } = require('@playwright/test');
+const expect = baseExpect.configure({ timeout: 20000 });
 const AxeBuilder = require('@axe-core/playwright').default;
 const root = resolve('.test-postgres');
 await mkdir(root, { recursive: true });
@@ -120,11 +121,13 @@ try {
   const context = await browser.newContext({ reducedMotion: 'reduce' });
   const page = await context.newPage();
   page.setDefaultTimeout(30000);
+  // Cold Next development route compilation can exceed the normal action timeout.
+  page.setDefaultNavigationTimeout(120000);
   const requests = [];
   page.on('request', (r) =>
     requests.push({ url: r.url(), headers: r.headers() }),
   );
-  async function mail(event) {
+  async function mail(event, recipient = 'browser@example.com') {
     while (await runOne(m, provider)) {}
     const files = await readdir(c.SANDBOX_MAIL_DIR);
     const all = await Promise.all(
@@ -134,7 +137,9 @@ try {
         ),
       ),
     );
-    return all.filter((v) => v.event === event).at(-1);
+    const matches = all.filter((v) => v.event === event && v.to === recipient);
+    expect(matches).toHaveLength(1);
+    return matches[0];
   }
   async function signup(email) {
     await page.goto(c.MARKETING_SITE_ORIGIN + '/launch');
@@ -208,7 +213,7 @@ try {
     'Replay rejected; preferences persisted; unsubscribe repeatable',
   );
   await signup('expired@example.com');
-  const expired = await mail('confirmation');
+  const expired = await mail('confirmation', 'expired@example.com');
   await db.query(
     "UPDATE marketing_capability_tokens SET expires_at=now()-interval '1 minute' WHERE purpose='confirm'",
   );
@@ -351,7 +356,7 @@ try {
     resolve(out, 'integrated-results.json'),
     JSON.stringify(
       {
-        date: '2026-11-09',
+        verifiedAt: new Date().toISOString(),
         database: 'disposable PostgreSQL',
         email: 'encrypted local SandboxProvider only',
         results,

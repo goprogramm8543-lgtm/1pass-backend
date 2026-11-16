@@ -29,7 +29,7 @@ it('feedback validates separate permission, protects content, persists without s
       { category: 'notes', description: '<script>alert(1)</script>' },
       { category: 'notes', password: 'secret' },
       { category: 'notes', description: '-----BEGIN PRIVATE KEY-----' },
-      { category: 'notes', country: 'USA' },
+      { category: 'notes', country: 'IN' }, // no longer collected
     ])
       expect((await post(payload)).statusCode).toBe(400);
     expect(
@@ -50,7 +50,6 @@ it('feedback validates separate permission, protects content, persists without s
           category: 'passwords',
           description: 'Finding my accounts',
           segment: 'consumer',
-          country: 'IN',
         })
       ).statusCode,
     ).toBe(202);

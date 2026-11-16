@@ -820,9 +820,6 @@ components:
             - family
             - small_business
             - enterprise
-        country:
-          type: string
-          pattern: ^[A-Z]{2}$
         email:
           type: string
           maxLength: 254
